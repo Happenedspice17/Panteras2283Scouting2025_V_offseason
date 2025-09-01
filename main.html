@@ -56,7 +56,7 @@
         <input type="number" name="L3auto" placeholder="L3auto" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
         <input type="number" name="L4auto" placeholder="L4auto" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
         <input type="number" name="Algaeauto" placeholder="Algaeauto" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
-        <input type="text" name="Comsauto" placeholder="Comsauto" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="text" name="Comsauto" placeholder="Comments Auto" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
       </div>
 
       <!-- Teleop Section -->
@@ -66,20 +66,21 @@
         <input type="number" name="L2tele" placeholder="L2tele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
         <input type="number" name="L3tele" placeholder="L3tele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
         <input type="number" name="L4tele" placeholder="L4tele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
-        <input type="number" name="Algaetele" placeholder="Algaetele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="Algaetele" placeholder="AlgaeNettele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
         <input type="number" name="Processortele" placeholder="Processortele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
         <input type="number" name="AlgaeReefTele" placeholder="AlgaeReefTele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
       </div>
 
       <!-- Other Section -->
-      <h2 class="text-xl font-semibold mt-6 text-green-400">Other</h2>
+      <h2 class="text-xl font-semibold mt-6 text-green-400">End Game</h2>
       <div class="grid grid-cols-2 gap-2">
         <input type="number" name="Deep" placeholder="Deep" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
         <input type="number" name="Shallow" placeholder="Shallow" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
-        <select name="DNC" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="DNC" placeholder="Park" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <!-- <select name="DNC" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
           <option value="No">DNC - No</option>
           <option value="Yes">DNC - Yes</option>
-        </select>
+        </select> -->
       </div>
 
       <!-- Comments + Initials -->
@@ -119,7 +120,15 @@
         <thead></thead>
         <tbody></tbody>
       </table>
-      <button type="button" id="backToFormBtn" class="w-full py-3 bg-red-600 hover:bg-red-500 rounded-xl font-bold mt-6 transition-colors">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+        <button type="button" id="exportDataBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-colors">
+            Export to CSV
+        </button>
+        <button type="button" id="clearDataBtn" class="w-full py-3 bg-red-600 hover:bg-red-500 rounded-xl font-bold transition-colors">
+            Clear Local Data
+        </button>
+      </div>
+      <button type="button" id="backToFormBtn" class="w-full py-3 bg-gray-600 hover:bg-gray-500 rounded-xl font-bold mt-6 transition-colors">
         Back to Form
       </button>
     </div>
@@ -128,7 +137,7 @@
 
   <script>
     // ** IMPORTANT: Replace this URL with your own Apps Script Web App URL **
-    const SCRIPT_URL = "Your URL";
+    const SCRIPT_URL = "YOUR URL HERE";
     
     const form = document.getElementById("scoutingForm");
     const statusMessage = document.getElementById("statusMessage");
@@ -139,14 +148,66 @@
     const qrcodeView = document.getElementById("qrcodeView");
     const qrcodeDiv = document.getElementById("qrcode");
     const newEntryBtn = document.getElementById("newEntryBtn");
+    const exportDataBtn = document.getElementById("exportDataBtn");
+    const clearDataBtn = document.getElementById("clearDataBtn");
 
-    // Handle form submission: save data and generate QR code
+    // --- Local Storage Functions ---
+    const LOCAL_STORAGE_KEY = 'scoutingData';
+
+    function saveToLocalStorage(data) {
+      const existingData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+      existingData.push(data);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(existingData));
+    }
+
+    function loadFromLocalStorage() {
+      return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+    }
+
+    function clearLocalStorage() {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+    }
+    
+    function exportToCsv(filename) {
+        const data = loadFromLocalStorage();
+        if (data.length === 0) {
+            statusMessage.textContent = "No data to export.";
+            return;
+        }
+
+        const headers = Object.keys(data[0]);
+        const csvRows = [
+            headers.join(','),
+            ...data.map(row => headers.map(header => {
+                const value = row[header];
+                // Escape double quotes and enclose in quotes if needed
+                return typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value;
+            }).join(','))
+        ];
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        statusMessage.textContent = "Data exported to CSV.";
+    }
+
+
+    // Handle form submission: save data, save to local storage, and generate QR code
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       statusMessage.textContent = "Submitting...";
 
       const formData = new FormData(form);
       const dataObject = Object.fromEntries(formData.entries());
+
+      // Save to local storage immediately
+      saveToLocalStorage(dataObject);
+      statusMessage.textContent = "Saved to local storage. ";
 
       try {
         // First, attempt to save the data to the Google Sheet (online)
@@ -157,9 +218,9 @@
         const result = await response.json();
 
         if (result.success) {
-          statusMessage.textContent = "✅ Saved successfully!";
+          statusMessage.textContent += "✅ Saved successfully to online sheet!";
         } else {
-          statusMessage.textContent = "❌ Error: " + result.message;
+          statusMessage.textContent += "❌ Error: " + result.message;
         }
 
         // Generate QR code regardless of online status for offline backup
@@ -173,7 +234,7 @@
         qrcodeView.classList.remove('hidden');
 
       } catch (err) {
-        statusMessage.textContent = "⚠️ Network error. QR code generated for offline transfer.";
+        statusMessage.textContent = "⚠️ Network error. Data saved to local storage. QR code generated for offline transfer.";
         console.error(err);
         
         // Generate QR code as primary action on network error
@@ -200,34 +261,26 @@
       scoutingForm.classList.add('hidden');
       viewDataBtn.classList.add('hidden');
       dataView.classList.remove('hidden');
-      statusMessage.textContent = "Loading data...";
       
-      try {
-        const response = await fetch(SCRIPT_URL);
-        const result = await response.json();
+      const localData = loadFromLocalStorage();
+      
+      const tableHead = dataView.querySelector("thead");
+      const tableBody = dataView.querySelector("tbody");
 
-        const tableHead = dataView.querySelector("thead");
-        const tableBody = dataView.querySelector("tbody");
+      if (localData.length > 0) {
+        const headers = Object.keys(localData[0]);
+        tableHead.innerHTML = `<tr>${headers.map(h => `<th class="p-2">${h}</th>`).join('')}</tr>`;
 
-        if (result.success && result.data.length > 0) {
-          const headers = Object.keys(result.data[0]);
-          tableHead.innerHTML = `<tr>${headers.map(h => `<th class="p-2">${h}</th>`).join('')}</tr>`;
+        tableBody.innerHTML = localData.map(rowData => {
+          const rowHtml = headers.map(header => `<td class="p-2">${rowData[header]}</td>`).join('');
+          return `<tr>${rowHtml}</tr>`;
+        }).join('');
 
-          tableBody.innerHTML = result.data.map(rowData => {
-            const rowHtml = headers.map(header => `<td class="p-2">${rowData[header]}</td>`).join('');
-            return `<tr>${rowHtml}</tr>`;
-          }).join('');
-
-          statusMessage.textContent = "Data loaded successfully.";
-        } else {
-          tableHead.innerHTML = '';
-          tableBody.innerHTML = `<tr><td colspan="100%" class="p-2 text-center">${result.message || 'No data found.'}</td></tr>`;
-          statusMessage.textContent = result.message || "No data found.";
-        }
-      } catch (err) {
-        statusMessage.textContent = 'Network error fetching data.';
-        console.error(err);
-        dataView.querySelector("tbody").innerHTML = `<tr><td colspan="100%" class="p-2 text-center">Network error.</td></tr>`;
+        statusMessage.textContent = `Displaying ${localData.length} entries from local storage.`;
+      } else {
+        tableHead.innerHTML = '';
+        tableBody.innerHTML = `<tr><td colspan="100%" class="p-2 text-center">No local data found.</td></tr>`;
+        statusMessage.textContent = "No data found in local storage.";
       }
     });
 
@@ -238,6 +291,41 @@
       viewDataBtn.classList.remove('hidden');
       statusMessage.textContent = '';
     });
+    
+    // Export button handler
+    exportDataBtn.addEventListener("click", () => {
+        const filename = `scouting-data-${new Date().toISOString().slice(0, 10)}.csv`;
+        exportToCsv(filename);
+    });
+
+    // Clear button handler with confirmation
+    clearDataBtn.addEventListener("click", () => {
+        const confirmationModal = document.createElement('div');
+        confirmationModal.innerHTML = `
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg w-full max-w-sm text-center">
+                    <p class="mb-4">Are you sure you want to clear all local data? This action cannot be undone.</p>
+                    <div class="flex gap-4">
+                        <button id="confirmClear" class="flex-1 py-2 bg-red-600 hover:bg-red-500 rounded-xl font-bold transition-colors">Yes, Clear</button>
+                        <button id="cancelClear" class="flex-1 py-2 bg-gray-600 hover:bg-gray-500 rounded-xl font-bold transition-colors">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(confirmationModal);
+
+        document.getElementById('confirmClear').addEventListener('click', () => {
+            clearLocalStorage();
+            statusMessage.textContent = "Local data has been cleared.";
+            confirmationModal.remove();
+            viewDataBtn.click(); // Refresh the view to show no data
+        });
+
+        document.getElementById('cancelClear').addEventListener('click', () => {
+            confirmationModal.remove();
+        });
+    });
+
   </script>
 </body>
 </html>
