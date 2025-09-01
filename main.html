@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FRC Scouting App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Library for QR code generation -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    /* Custom styles for the table */
+    #dataView table {
+      border-collapse: collapse;
+    }
+    #dataView th, #dataView td {
+      border: 1px solid #374151; /* gray-700 */
+      padding: 8px;
+    }
+    #dataView th {
+      background-color: #1f2937; /* gray-800 */
+      font-weight: bold;
+    }
+    #dataView tr:nth-child(even) {
+      background-color: #111827; /* gray-900 */
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center font-sans p-4">
+
+  <div id="appContainer" class="w-full max-w-2xl bg-gray-800 p-6 rounded-2xl shadow-lg">
+    <h1 class="text-3xl font-bold mb-6 text-center text-green-400">FRC Scouting</h1>
+    
+    <!-- Status message and loading indicator -->
+    <p id="statusMessage" class="text-center mb-4 text-sm font-semibold"></p>
+
+    <!-- Main Scouting Form -->
+    <form id="scoutingForm" class="space-y-4">
+
+      <!-- Match + Team Lookup -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="match" class="block text-sm font-medium text-gray-400">Match Number</label>
+          <input type="number" id="match" name="match" required class="w-full p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        </div>
+        <div>
+          <label for="teamNumber" class="block text-sm font-medium text-gray-400">Team Number</label>
+          <input type="number" id="teamNumber" name="teamNumber" required class="w-full p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        </div>
+      </div>
+
+      <!-- Autonomous Section -->
+      <h2 class="text-xl font-semibold mt-6 text-green-400">Autonomous</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <input type="number" name="L1auto" placeholder="L1auto" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="L2auto" placeholder="L2auto" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="L3auto" placeholder="L3auto" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="L4auto" placeholder="L4auto" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="Algaeauto" placeholder="Algaeauto" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="text" name="Comsauto" placeholder="Comsauto" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+      </div>
+
+      <!-- Teleop Section -->
+      <h2 class="text-xl font-semibold mt-6 text-green-400">Teleop</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <input type="number" name="L1tele" placeholder="L1tele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="L2tele" placeholder="L2tele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="L3tele" placeholder="L3tele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="L4tele" placeholder="L4tele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="Algaetele" placeholder="Algaetele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="Processortele" placeholder="Processortele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="AlgaeReefTele" placeholder="AlgaeReefTele" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+      </div>
+
+      <!-- Other Section -->
+      <h2 class="text-xl font-semibold mt-6 text-green-400">Other</h2>
+      <div class="grid grid-cols-2 gap-2">
+        <input type="number" name="Deep" placeholder="Deep" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <input type="number" name="Shallow" placeholder="Shallow" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+        <select name="DNC" class="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+          <option value="No">DNC - No</option>
+          <option value="Yes">DNC - Yes</option>
+        </select>
+      </div>
+
+      <!-- Comments + Initials -->
+      <div>
+        <label for="Generalcoms" class="block text-sm font-medium text-gray-400">General Comments</label>
+        <textarea id="Generalcoms" name="Generalcoms" rows="3" class="w-full p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500"></textarea>
+      </div>
+      <div>
+        <label for="Initials" class="block text-sm font-medium text-gray-400">Initials</label>
+        <input type="text" id="Initials" name="Initials" required class="w-full p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring focus:ring-green-500">
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+        <button type="submit" class="w-full py-3 bg-green-600 hover:bg-green-500 rounded-xl font-bold transition-colors">
+          Submit & Save
+        </button>
+        <button type="button" id="viewDataBtn" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-colors">
+          View All Data
+        </button>
+      </div>
+    </form>
+
+    <!-- QR Code View -->
+    <div id="qrcodeView" class="hidden text-center mt-6">
+      <p class="text-lg mb-4">Scan the QR code to transfer data.</p>
+      <div id="qrcode" class="p-4 bg-white rounded-lg inline-block"></div>
+      <button type="button" id="newEntryBtn" class="w-full py-3 bg-red-600 hover:bg-red-500 rounded-xl font-bold mt-6 transition-colors">
+        New Entry
+      </button>
+    </div>
+
+    <!-- Data Table View -->
+    <div id="dataView" class="hidden mt-6 overflow-x-auto">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">Scouting Data</h2>
+      <table class="w-full text-sm">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+      <button type="button" id="backToFormBtn" class="w-full py-3 bg-red-600 hover:bg-red-500 rounded-xl font-bold mt-6 transition-colors">
+        Back to Form
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // ** IMPORTANT: Replace this URL with your own Apps Script Web App URL **
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxaX8kdF8FTFYV8G-vyOZQOzO7VEOQfFcT-yVaLD12_dhnF9GPMOD4ULBcEthptQVNV/exec";
+    
+    const form = document.getElementById("scoutingForm");
+    const statusMessage = document.getElementById("statusMessage");
+    const viewDataBtn = document.getElementById("viewDataBtn");
+    const dataView = document.getElementById("dataView");
+    const scoutingForm = document.getElementById("scoutingForm");
+    const backToFormBtn = document.getElementById("backToFormBtn");
+    const qrcodeView = document.getElementById("qrcodeView");
+    const qrcodeDiv = document.getElementById("qrcode");
+    const newEntryBtn = document.getElementById("newEntryBtn");
+
+    // Handle form submission: save data and generate QR code
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      statusMessage.textContent = "Submitting...";
+
+      const formData = new FormData(form);
+      const dataObject = Object.fromEntries(formData.entries());
+
+      try {
+        // First, attempt to save the data to the Google Sheet (online)
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          body: formData 
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          statusMessage.textContent = "✅ Saved successfully!";
+        } else {
+          statusMessage.textContent = "❌ Error: " + result.message;
+        }
+
+        // Generate QR code regardless of online status for offline backup
+        qrcodeDiv.innerHTML = ''; // Clear previous QR code
+        new QRCode(qrcodeDiv, JSON.stringify(dataObject));
+        statusMessage.textContent += " QR code generated.";
+        
+        // Switch to QR code view
+        scoutingForm.classList.add('hidden');
+        viewDataBtn.classList.add('hidden');
+        qrcodeView.classList.remove('hidden');
+
+      } catch (err) {
+        statusMessage.textContent = "⚠️ Network error. QR code generated for offline transfer.";
+        console.error(err);
+        
+        // Generate QR code as primary action on network error
+        qrcodeDiv.innerHTML = '';
+        new QRCode(qrcodeDiv, JSON.stringify(dataObject));
+
+        scoutingForm.classList.add('hidden');
+        viewDataBtn.classList.add('hidden');
+        qrcodeView.classList.remove('hidden');
+      }
+    });
+
+    // Go back to the form from the QR code view
+    newEntryBtn.addEventListener("click", () => {
+      scoutingForm.classList.remove('hidden');
+      viewDataBtn.classList.remove('hidden');
+      qrcodeView.classList.add('hidden');
+      form.reset();
+      statusMessage.textContent = '';
+    });
+
+    // View all scouting data
+    viewDataBtn.addEventListener("click", async () => {
+      scoutingForm.classList.add('hidden');
+      viewDataBtn.classList.add('hidden');
+      dataView.classList.remove('hidden');
+      statusMessage.textContent = "Loading data...";
+      
+      try {
+        const response = await fetch(SCRIPT_URL);
+        const result = await response.json();
+
+        const tableHead = dataView.querySelector("thead");
+        const tableBody = dataView.querySelector("tbody");
+
+        if (result.success && result.data.length > 0) {
+          const headers = Object.keys(result.data[0]);
+          tableHead.innerHTML = `<tr>${headers.map(h => `<th class="p-2">${h}</th>`).join('')}</tr>`;
+
+          tableBody.innerHTML = result.data.map(rowData => {
+            const rowHtml = headers.map(header => `<td class="p-2">${rowData[header]}</td>`).join('');
+            return `<tr>${rowHtml}</tr>`;
+          }).join('');
+
+          statusMessage.textContent = "Data loaded successfully.";
+        } else {
+          tableHead.innerHTML = '';
+          tableBody.innerHTML = `<tr><td colspan="100%" class="p-2 text-center">${result.message || 'No data found.'}</td></tr>`;
+          statusMessage.textContent = result.message || "No data found.";
+        }
+      } catch (err) {
+        statusMessage.textContent = 'Network error fetching data.';
+        console.error(err);
+        dataView.querySelector("tbody").innerHTML = `<tr><td colspan="100%" class="p-2 text-center">Network error.</td></tr>`;
+      }
+    });
+
+    // Go back to the form from the data view
+    backToFormBtn.addEventListener("click", () => {
+      dataView.classList.add('hidden');
+      scoutingForm.classList.remove('hidden');
+      viewDataBtn.classList.remove('hidden');
+      statusMessage.textContent = '';
+    });
+  </script>
+</body>
+</html>
